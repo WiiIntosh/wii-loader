@@ -100,11 +100,17 @@ u32 _main(void *base)
 		goto shutdown;
 	}
 
-	gecko_printf("Going into IPC mainloop...\n");
-	vector = ipc_process_slow();
-	gecko_printf("IPC mainloop done!\n");
+	//
+	// No IPC services used, completely shutdown Starlet.
+	//
 	gecko_printf("Shutting down IPC...\n");
 	ipc_shutdown();
+	gecko_printf("Shutting down interrupts...\n");
+	irq_shutdown();
+	gecko_printf("Shutting down caches and MMU...\n");
+	mem_shutdown();
+
+	while (1);
 
 shutdown:
 	gecko_printf("Shutting down interrupts...\n");
