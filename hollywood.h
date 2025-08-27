@@ -61,6 +61,7 @@ Copyright (C) 2008, 2009	John Kelley <wiidev@kelley.ca>
 // 0xFFFFFF by default, if cleared disables respective outputs. Top bits non-settable.
 #define		HW_GPIO1ENABLE		(HW_REG_BASE + 0x0dc)
 
+#define 	HW_GPIO1_SHUTDOWN	0x000002
 #define		HW_GPIO1_SLOT		0x000020
 #define		HW_GPIO1_DEBUG		0xFF0000
 #define		HW_GPIO1_DEBUG_SH	16
@@ -89,6 +90,7 @@ Copyright (C) 2008, 2009	John Kelley <wiidev@kelley.ca>
 
 // maybe a GPIO???
 #define		HW_RESETS		(HW_REG_BASE + 0x194)
+#define     HW_RESETS_RSTBINB	0x000001
 
 #define		HW_CLOCKS		(HW_REG_BASE + 0x1b4)
 

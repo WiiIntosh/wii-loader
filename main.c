@@ -33,6 +33,20 @@ Copyright (C) 2009		John Kelley <wiidev@kelley.ca>
 
 FATFS fatfs;
 
+// These defines are for the ARMCTRL regs
+// See http://wiibrew.org/wiki/Hardware/IPC
+#define		IPC_CTRL_Y1	0x01
+#define		IPC_CTRL_X2	0x02
+#define		IPC_CTRL_X1	0x04
+#define		IPC_CTRL_Y2	0x08
+
+// reset both flags (X* for ARM and Y* for PPC)
+#define		IPC_CTRL_RESET	0x06
+
+// IPC commands.
+#define CMD_POWEROFF    0xCAFE0001
+#define CMD_REBOOT      0xCAFE0002
+
 u32 _main(void *base)
 {
 	FRESULT fres;
@@ -107,10 +121,29 @@ u32 _main(void *base)
 	//
 	gecko_printf("Shutting down interrupts...\n");
 	irq_shutdown();
-	gecko_printf("Shutting down caches and MMU...\n");
-	mem_shutdown();
 
-	while (1);
+	while (1) {
+		//
+		// Check for message sent flag.
+		//
+		u32 ctrl = read32(HW_IPC_ARMCTRL);
+		if (!(ctrl & IPC_CTRL_X1)) {
+			continue;
+		}
+
+		//
+		// Read PowerPC's message and handle command.
+		//
+		u32 msg = read32(HW_IPC_PPCMSG);
+		if (msg == CMD_POWEROFF) {
+			write32(HW_GPIO1OUT, read32(HW_GPIO1OUT) | HW_GPIO1_SHUTDOWN);
+		} else if (msg == CMD_REBOOT) {
+			write32(HW_RESETS, read32(HW_RESETS) & ~(HW_RESETS_RSTBINB));
+		}
+
+		// writeback ctrl value to reset IPC
+		write32(HW_IPC_ARMCTRL, ctrl);
+	}
 
 shutdown:
 	gecko_printf("Shutting down interrupts...\n");
