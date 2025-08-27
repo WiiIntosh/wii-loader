@@ -14,7 +14,6 @@ Copyright (C) 2009			Andre Heider "dhewg" <dhewg@wiibrew.org>
 #include "hollywood.h"
 #include "gecko.h"
 #include "utils.h"
-#include "ipc.h"
 #include "crypto.h"
 #include "nand.h"
 #include "sdhc.h"
@@ -81,7 +80,7 @@ void irq_handler(void)
 	}
 	if(flags & IRQF_IPC) {
 		//gecko_printf("IRQ: IPC\n");
-		ipc_irq();
+		//ipc_irq();
 		write32(HW_ARMIRQFLAG, IRQF_IPC);
 	}
 	if(flags & IRQF_AES) {

@@ -23,7 +23,6 @@ Copyright (C) 2009		John Kelley <wiidev@kelley.ca>
 #include "panic.h"
 #include "powerpc_elf.h"
 #include "irq.h"
-#include "ipc.h"
 #include "exception.h"
 #include "crypto.h"
 #include "nand.h"
@@ -71,7 +70,10 @@ u32 _main(void *base)
 	boot2_init();
 
 	gecko_printf("Initializing IPC...\n");
-	ipc_initialize();
+	write32(HW_IPC_ARMMSG, 0);
+	write32(HW_IPC_PPCMSG, 0);
+	write32(HW_IPC_PPCCTRL, IPC_CTRL_RESET);
+	write32(HW_IPC_ARMCTRL, IPC_CTRL_RESET);
 
 	gecko_printf("Initializing SDHC...\n");
 	sdhc_init();
@@ -101,10 +103,8 @@ u32 _main(void *base)
 	}
 
 	//
-	// No IPC services used, completely shutdown Starlet.
+	// Disable interrupts, no longer needed.
 	//
-	gecko_printf("Shutting down IPC...\n");
-	ipc_shutdown();
 	gecko_printf("Shutting down interrupts...\n");
 	irq_shutdown();
 	gecko_printf("Shutting down caches and MMU...\n");

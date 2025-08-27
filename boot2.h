@@ -12,8 +12,6 @@ Copyright (C) 2008, 2009	Sven Peter <svenpeter@gmail.com>
 #ifndef __BOOT2_H__
 #define __BOOT2_H__
 
-#include "ipc.h"
-
 typedef struct {
 	u32 cid;
 	u16 index;
@@ -69,7 +67,6 @@ typedef struct _tik {
 
 u32 boot2_run(u32 tid_hi, u32 tid_lo);
 void boot2_init();
-u32 boot2_ipc(volatile ipc_request *req);
 
 #endif
 

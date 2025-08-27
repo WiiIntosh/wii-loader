@@ -12,12 +12,9 @@ Copyright (C) 2009			Andre Heider "dhewg" <dhewg@wiibrew.org>
 #ifndef __POWERPC_H__
 #define __POWERPC_H__
 
-#include "ipc.h"
-
 void powerpc_upload_stub(u32 entry);
 void powerpc_hang(void);
 void powerpc_reset(void);
-void powerpc_ipc(volatile ipc_request *req);
 
 #endif
 

@@ -11,7 +11,6 @@ Copyright (C) 2008, 2009	Hector Martin "marcan" <marcan@marcansoft.com>
 OUTPUT_FORMAT("elf32-bigarm")
 OUTPUT_ARCH(arm)
 EXTERN(_start)
-EXTERN(__ipc_info)
 ENTRY(_start)
 
 __stack_size = 0x800;
@@ -52,11 +51,6 @@ SECTIONS
 		. = ALIGN(4);
 		__bss2_end = . ;
 	} >mem2
-	
-	.ipcinfo __mem2_area_end - 4 :
-	{
-		LONG(__ipc_info);
-	} >mem2	
 
 	.init :
 	{

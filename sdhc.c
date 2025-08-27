@@ -32,10 +32,6 @@
 #include "irq.h"
 #endif
 
-#ifdef CAN_HAZ_IPC
-#include "ipc.h"
-#endif
-
 struct sdhc_host sc_host;
 
 //#define SDHC_DEBUG
@@ -784,14 +780,6 @@ sdhc_intr(void)
 		}
 	}
 
-#ifdef CAN_HAZ_IPC
-	/* Wake up the sdmmc event thread to scan for cards. */
-	 if (ISSET(status, SDHC_CARD_REMOVAL|SDHC_CARD_INSERTION)) {
-		// this pushes a request to the slow queue so that we
-		// don't block other IRQs.
-		ipc_enqueue_slow(IPC_DEV_SDHC, IPC_SDHC_DISCOVER, 0);
-	}
-#endif
 	/*
 	 * Wake up the blocking process to service command
 	 * related interrupt(s).
@@ -859,18 +847,3 @@ void sdhc_exit(void)
 #endif
        sdhc_shutdown();
 }
-
-#ifdef CAN_HAZ_IPC
-void sdhc_ipc(volatile ipc_request *req)
-{
-	switch (req->req) {
-	case IPC_SDHC_DISCOVER:
-	sdmmc_needs_discover();
-		break;
-	case IPC_SDHC_EXIT:
-		sdhc_exit();
-		ipc_post(req->code, req->tag, 0);
-		break;
-	}
-}
-#endif

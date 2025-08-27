@@ -13,7 +13,6 @@ Copyright (C) 2008, 2009	Haxx Enterprises <bushing@gmail.com>
 #include "hollywood.h"
 #include "gecko.h"
 #include "utils.h"
-#include "ipc.h"
 #include "memory.h"
 #include "panic.h"
 
