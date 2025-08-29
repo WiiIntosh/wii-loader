@@ -46,6 +46,35 @@ FATFS fatfs;
 // IPC commands.
 #define CMD_POWEROFF    0xCAFE0001
 #define CMD_REBOOT      0xCAFE0002
+#define CMD_START_FB    0xCAFE0010
+#define CMD_STOP_FB     0xCAFE0011
+#define CMD_SET_XFB		0xA1000000
+#define CMD_SET_FB		0xA2000000
+
+//
+// Converts two ARGB pixels to YUV for display.
+//
+static u32 argb_to_yuv(u32 argb1, u32 argb2) {
+  u8 r1 = (argb1 >> 16) & 0xFF;
+  u8 g1 = (argb1 >> 8) & 0xFF;
+  u8 b1 = argb1 & 0xFF;
+  u8 r2 = (argb2 >> 16) & 0xFF;
+  u8 g2 = (argb2 >> 8) & 0xFF;
+  u8 b2 = argb2 & 0xFF;
+
+  u32 y1 = (299 * r1 + 587 * g1 + 114 * b1) / 1000;
+  u32 cb1 = (-16874 * r1 - 33126 * g1 + 50000 * b1 + 12800000) / 100000;
+  u32 cr1 = (50000 * r1 - 41869 * g1 - 8131 * b1 + 12800000) / 100000;
+ 
+  u32 y2 = (299 * r2 + 587 * g2 + 114 * b2) / 1000;
+  u32 cb2 = (-16874 * r2 - 33126 * g2 + 50000 * b2 + 12800000) / 100000;
+  u32 cr2 = (50000 * r2 - 41869 * g2 - 8131 * b2 + 12800000) / 100000;
+ 
+  u32 cb = (cb1 + cb2) >> 1;
+  u32 cr = (cr1 + cr2) >> 1;
+ 
+  return ((y1 << 24) | (cb << 16) | (y2 << 8) | cr);
+}
 
 u32 _main(void *base)
 {
@@ -53,6 +82,10 @@ u32 _main(void *base)
 	int res;
 	u32 vector;
 	(void)base;
+
+	volatile u32 *fb_base;
+	volatile u32 *xfb_base;
+	int fb_run = 0;
 
 	gecko_init();
 	gecko_printf("mini %s loading\n", git_version);
@@ -125,9 +158,18 @@ u32 _main(void *base)
 	while (1) {
 		//
 		// Check for message sent flag.
+		// If none, process FB -> XFB.
 		//
 		u32 ctrl = read32(HW_IPC_ARMCTRL);
 		if (!(ctrl & IPC_CTRL_X1)) {
+			if (fb_run) {
+				dc_invalidaterange(fb_base, 640 * 480 * 4);
+				for (int i = 0, j = 0; i < (640 * 240); i++, j += 2) {
+					xfb_base[i] = argb_to_yuv(fb_base[j], fb_base[j + 1]);
+				}
+
+				dc_flushrange(xfb_base, 640 * 480 * 2);
+			}
 			continue;
 		}
 
@@ -139,6 +181,14 @@ u32 _main(void *base)
 			write32(HW_GPIO1OUT, read32(HW_GPIO1OUT) | HW_GPIO1_SHUTDOWN);
 		} else if (msg == CMD_REBOOT) {
 			write32(HW_RESETS, read32(HW_RESETS) & ~(HW_RESETS_RSTBINB));
+		} else if (msg == CMD_START_FB) {
+			fb_run = 1;
+		} else if (msg == CMD_STOP_FB) {
+			fb_run = 0;
+		} else if ((msg & 0xFF000000) == CMD_SET_XFB) {
+			xfb_base = (volatile u32*) ((msg & 0x00FFFFFF) << 8);
+		} else if ((msg & 0xFF000000) == CMD_SET_FB) {
+			fb_base = (volatile u32*) ((msg & 0x00FFFFFF) << 8);
 		}
 
 		// writeback ctrl value to reset IPC
